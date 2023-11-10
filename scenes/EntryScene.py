@@ -1,5 +1,5 @@
-from BaseScene import BaseScene
-from MainScene import MainScene
+from scenes.BaseScene import BaseScene
+from scenes.MainScene import MainScene
 import pygame
 
 class EntryScene(BaseScene):

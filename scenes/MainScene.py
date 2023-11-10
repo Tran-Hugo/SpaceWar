@@ -1,5 +1,5 @@
-from BaseScene import BaseScene
-from Ship import Ship
+from scenes.BaseScene import BaseScene
+from entities.Ship import Ship
 import pygame
 
 class MainScene(BaseScene):

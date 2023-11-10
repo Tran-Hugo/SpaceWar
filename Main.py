@@ -1,5 +1,5 @@
 import pygame
-from EntryScene import EntryScene
+from scenes.EntryScene import EntryScene
 
 def run(width, height, fps, starting_scene):
         pygame.init()
