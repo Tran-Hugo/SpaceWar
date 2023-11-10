@@ -8,14 +8,14 @@ class BaseScene:
             if event.type == pygame.QUIT:
                 pygame.quit()
     
-    def ProcessInput(self, events):
-        print("uh-oh, you didn't override this in the child class")
+    def ProcessInput(self, events, pressed_keys):
+        pass
 
     def Update(self):
-        print("uh-oh, you didn't override this in the child class")
+        pass
 
     def Render(self, screen):
-        print("uh-oh, you didn't override this in the child class")
+        pass
 
     def SwitchToScene(self, next_scene):
         self.next = next_scene
