@@ -37,4 +37,4 @@ def run(width, height, fps, starting_scene):
             pygame.display.flip()
             clock.tick(fps)
 
-run(400, 300, 60,EntryScene())
+run(1280, 720, 60,EntryScene())
