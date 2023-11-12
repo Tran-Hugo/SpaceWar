@@ -5,6 +5,7 @@ import math
 from math import *
 
 from Config import Config
+from entities.Explosion import Explosion
 
 class Rock():
     def __init__(self, x, y):
@@ -50,6 +51,16 @@ class Rock():
             if self.rect.colliderect(ship.rect) and ship.invincible == False:
                 ship.lose_life()          
                 return True
+        return False
+    
+    def check_bullet_collision(self, ships, rocks, explosion_group):
+        for ship in ships:
+            for bullet in ship.bullets:
+                if self.rect.colliderect(bullet.rect):
+                    ship.bullets.remove(bullet)
+                    explosion = Explosion(self.x,self.y)
+                    explosion_group.add(explosion)
+                    rocks.remove(self)
         return False
     
     def draw(self,screen):
