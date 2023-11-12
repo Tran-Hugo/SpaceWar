@@ -12,6 +12,7 @@ class MainScene(BaseScene):
         pygame.font.init()
         self.config = Config.getInstance()
         self.ship = Ship()
+        self.rock = Rock(200,250)
     
     def ProcessInput(self, events, pressed_keys):
         if pressed_keys[pygame.K_UP] and self.ship.rect.y > 0 :
@@ -38,11 +39,16 @@ class MainScene(BaseScene):
                     self.ship.bullets.append(Bullet(self.ship.rect.x, self.ship.rect.y, angle))
 
     def Update(self):
-        self.ship.move()   
+        self.ship.move()
+        self.rock.float()
+        if self.rock.check_collision([self.ship]):
+            
+            print("lifes = "+ str(self.ship.lifes))
 
     def Render(self, screen):
         # For the sake of brevity, the title scene is a blank red screen
         screen.fill((0, 0, 0))
+        self.rock.draw(screen)
         self.ship.draw(screen)
         for bullet in self.ship.bullets:
             bullet.move()
