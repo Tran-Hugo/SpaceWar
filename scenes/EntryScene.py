@@ -1,10 +1,12 @@
 from scenes.BaseScene import BaseScene
 from scenes.MainScene import MainScene
 import pygame
+from Config import Config
 
 class EntryScene(BaseScene):
     def __init__(self):
         BaseScene.__init__(self)
+        self.config = Config.getInstance()
         self.message = "Press any key"
         pygame.font.init() 
         self.font = pygame.font.Font(None, 36)
@@ -19,4 +21,4 @@ class EntryScene(BaseScene):
         # For the sake of brevity, the title scene is a blank red screen
         screen.fill((0, 0, 0))
         # print(screen)
-        screen.blit(self.text, (100,100))
+        screen.blit(self.text, ((self.config.getWidth() / 2) - (self.text.get_width() / 2), self.config.getHeight() / 2))
