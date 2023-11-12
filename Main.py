@@ -1,9 +1,11 @@
 import pygame
 from scenes.EntryScene import EntryScene
+from Config import Config
 
-def run(width, height, fps, starting_scene):
+def run(fps, starting_scene):
         pygame.init()
-        screen = pygame.display.set_mode((width, height))
+        config = Config.getInstance()
+        screen = config.getScreen()
         clock = pygame.time.Clock()
 
         active_scene = starting_scene
@@ -15,12 +17,8 @@ def run(width, height, fps, starting_scene):
                 quit_attempt = False
                 if event.type == pygame.QUIT:
                     quit_attempt = True
-                elif event.type == pygame.KEYDOWN:
-                    alt_pressed = pressed_keys[pygame.K_LALT] or \
-                                  pressed_keys[pygame.K_RALT]
-                    if event.key == pygame.K_ESCAPE:
-                        quit_attempt = True
-                    elif event.key == pygame.K_F4 and alt_pressed:
+                if event.type == pygame.KEYDOWN:
+                    if (event.key == pygame.K_ESCAPE) or (pressed_keys[pygame.K_LALT] or pressed_keys[pygame.K_RALT] and event.key == pygame.K_F4) :
                         quit_attempt = True
 
                 if quit_attempt:
@@ -37,4 +35,4 @@ def run(width, height, fps, starting_scene):
             pygame.display.flip()
             clock.tick(fps)
 
-run(1280, 720, 60,EntryScene())
+run(60, EntryScene())
