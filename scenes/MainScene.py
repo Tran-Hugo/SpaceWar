@@ -4,13 +4,18 @@ import pygame
 import math
 from Config import Config
 from entities.Bullet import Bullet
+from Server import Server
+from network import Network
 
 class MainScene(BaseScene):
     def __init__(self):
         BaseScene.__init__(self)
         pygame.font.init()
         self.config = Config.getInstance()
+        self.network = Network()
         self.ship = Ship()
+        self.players = []
+
     
     def ProcessInput(self, events, pressed_keys):
         if pressed_keys[pygame.K_UP] and self.ship.rect.y > 0 :
@@ -37,14 +42,21 @@ class MainScene(BaseScene):
                     self.ship.bullets.append(Bullet(self.ship.rect.x, self.ship.rect.y, angle))
 
     def Update(self):
-        self.ship.move()       
+        self.players = self.network.send(self.ship.to_dict())
+        self.ship.move()
+        for ship in self.players:
+            new_ship = Ship()
+            new_ship.from_dict(ship)
+            new_ship.move()
+            self.players[self.players.index(ship)] = new_ship
 
     def Render(self, screen):
         # For the sake of brevity, the title scene is a blank red screen
         screen.fill((0, 0, 0))
-        self.ship.draw(screen)
-        for bullet in self.ship.bullets:
-            bullet.move()
-            bullet.draw()
-            if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
-                self.ship.bullets.remove(bullet)
+        for ship in self.players:
+            ship.draw(screen)
+            for bullet in ship.bullets:
+                bullet.move()
+                bullet.draw()
+                if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                    ship.bullets.remove(bullet)
