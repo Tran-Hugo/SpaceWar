@@ -56,7 +56,7 @@ class Rock():
                 return True
         return False
     
-    def check_bullet_collision(self, ships, rocks, explosion_group):
+    def check_bullet_collision(self, ships, rocks, explosion_group, score):
         for ship in ships:
             for bullet in ship.bullets:
                 if self.rect.colliderect(bullet.rect):
@@ -65,8 +65,11 @@ class Rock():
                     explosion_group.add(explosion)
                     rocks.remove(self)
                     if self.size > 0.5:
-                        for i in range(3):
+                        score.add(100)
+                        for i in range(random.randint(1,4)):
                             rocks.append(Rock(self.x,self.y,self.size/2))
+                    else:
+                        score.add(200)
         return False
     
     def draw(self,screen):

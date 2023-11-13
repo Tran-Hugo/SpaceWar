@@ -1,4 +1,5 @@
 from entities.Rock import Rock
+from entities.Score import Score
 from scenes.BaseScene import BaseScene
 from entities.Ship import Ship
 import pygame
@@ -11,6 +12,7 @@ class MainScene(BaseScene):
         BaseScene.__init__(self)
         pygame.font.init()
         self.config = Config.getInstance()
+        self.score = Score()
         self.ship = Ship()
         self.rocks = [Rock(200,250),Rock(300,150),Rock(500,300)]
         self.explosion_group = pygame.sprite.Group()
@@ -40,12 +42,13 @@ class MainScene(BaseScene):
             rock.float()
             if rock.check_collision([self.ship]):
                 print("lifes = "+ str(self.ship.lifes))
-            rock.check_bullet_collision([self.ship], self.rocks, self.explosion_group)
+            rock.check_bullet_collision([self.ship], self.rocks, self.explosion_group, self.score)
         self.explosion_group.update()
 
     def Render(self, screen):
         # For the sake of brevity, the title scene is a blank red screen
         screen.fill((0, 0, 0))
+        self.score.draw()
         self.ship.draw(screen)
         for bullet in self.ship.bullets:
             bullet.move()
