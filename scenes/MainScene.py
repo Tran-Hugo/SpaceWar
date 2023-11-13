@@ -1,3 +1,7 @@
+import random
+from entities.Heart import Heart
+from entities.Rock import Rock
+from entities.Score import Score
 from scenes.BaseScene import BaseScene
 from entities.Ship import Ship
 import pygame
@@ -13,50 +17,104 @@ class MainScene(BaseScene):
         pygame.font.init()
         self.config = Config.getInstance()
         self.network = Network()
+        self.score = Score()
         self.ship = Ship()
         self.players = []
 
+        self.heart = Heart()
+        self.rocks = [Rock(200,250),Rock(300,150),Rock(500,300)]
+        self.explosion_group = pygame.sprite.Group()
     
     def ProcessInput(self, events, pressed_keys):
-        if pressed_keys[pygame.K_UP] and self.ship.rect.y > 0 :
-            self.ship.velocity[1] = -1
-        elif pressed_keys[pygame.K_DOWN] and self.ship.rect.y < self.config.getHeight() - self.ship.rect.height :
-            self.ship.velocity[1] = 1
-        else:
-            self.ship.velocity[1] = 0
+        if self.ship is not None:
+            if pressed_keys[pygame.K_z] and self.ship.rect.y > 0 :
+                self.ship.velocity[1] = -1
+            elif pressed_keys[pygame.K_s] and self.ship.rect.y < self.config.getHeight() - self.ship.rect.height :
+                self.ship.velocity[1] = 1
+            else:
+                self.ship.velocity[1] = 0
 
-        if pressed_keys[pygame.K_LEFT] and self.ship.rect.x > 0 :
-            self.ship.velocity[0] = -1
-        elif pressed_keys[pygame.K_RIGHT] and self.ship.rect.x < self.config.getWidth() - self.ship.rect.width:
-            self.ship.velocity[0] = 1
-        else:
-            self.ship.velocity[0] = 0
+            if pressed_keys[pygame.K_q] and self.ship.rect.x > 0 :
+                self.ship.velocity[0] = -1
+            elif pressed_keys[pygame.K_d] and self.ship.rect.x < self.config.getWidth() - self.ship.rect.width:
+                self.ship.velocity[0] = 1
+            else:
+                self.ship.velocity[0] = 0
 
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
-                    opposite = mouse_y - self.ship.rect.y
-                    adjacent = mouse_x - self.ship.rect.x
-                    angle = math.atan2(opposite, adjacent)
-                    self.ship.bullets.append(Bullet(self.ship.rect.x, self.ship.rect.y, angle))
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.ship.shoot()
 
     def Update(self):
         self.players = self.network.send(self.ship.to_dict())
-        self.ship.move()
-        for ship in self.players:
-            new_ship = Ship()
-            new_ship.from_dict(ship)
-            new_ship.move()
-            self.players[self.players.index(ship)] = new_ship
+        if self.ship is not None:
+            self.heart.update_life(self.ship)
+            self.ship.move()
+            for rock in self.rocks:
+                rock.float()
+                if rock.check_collision([self.ship]):
+                    print("lifes = "+ str(self.ship.lifes))
+                rock.check_bullet_collision([self.ship], self.rocks, self.explosion_group, self.score)
+            self.explosion_group.update()
+            if self.ship.lifes <= 0:
+                self.heart.update_life(self.ship)
+                self.remove_ship()
+            for ship in self.players:
+                new_ship = Ship()
+                new_ship.from_dict(ship)
+                new_ship.move()
+                self.players[self.players.index(ship)] = new_ship
+        else :
+            for rock in self.rocks:
+                rock.float()
+                rock.check_collision([])
+                rock.check_bullet_collision([], self.rocks, self.explosion_group, self.score)
+            self.explosion_group.update()
+            for ship in self.players:
+                new_ship = Ship()
+                new_ship.from_dict(ship)
+                new_ship.move()
+                self.players[self.players.index(ship)] = new_ship
+        if len(self.rocks) == 0:
+            for i in range(random.randint(2,5)):
+                self.rocks.append(Rock(random.randint(0,500),random.randint(0,500)))
+
+    def remove_ship(self):
+        self.ship = None
 
     def Render(self, screen):
-        # For the sake of brevity, the title scene is a blank red screen
         screen.fill((0, 0, 0))
-        for ship in self.players:
-            ship.draw(screen)
-            for bullet in ship.bullets:
+        self.score.draw()
+        self.heart.draw(screen)
+        if self.ship is None:
+            for rock in self.rocks:
+                rock.draw(screen)
+            self.explosion_group.draw(screen)
+            font = pygame.font.Font(None, 36)
+            text = font.render("You Lose", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(self.config.getWidth() / 2, self.config.getHeight() / 2))
+            screen.blit(text, text_rect)
+            for ship in self.players:
+                ship.draw(screen)
+                for bullet in ship.bullets:
+                    bullet.move()
+                    bullet.draw()
+                    if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                        ship.bullets.remove(bullet)
+        else:
+            self.ship.draw(screen)
+            for bullet in self.ship.bullets:
                 bullet.move()
                 bullet.draw()
                 if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
-                    ship.bullets.remove(bullet)
+                    self.ship.bullets.remove(bullet)
+            for rock in self.rocks:
+                rock.draw(screen)
+            self.explosion_group.draw(screen)
+            for ship in self.players:
+                ship.draw(screen)
+                for bullet in ship.bullets:
+                    bullet.move()
+                    bullet.draw()
+                    if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                        ship.bullets.remove(bullet)
