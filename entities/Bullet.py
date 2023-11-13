@@ -27,3 +27,17 @@ class Bullet():
     def draw(self):
         self.config.getScreen().blit(self.img, self.rect)
         # pygame.draw.rect(self.config.getScreen(), (255, 0, 0), self.rect, 1) # debug
+
+    def to_dict(self):
+        return {
+            "x": self.rect.x,
+            "y": self.rect.y,
+            "velocity": self.velocity,
+            "angle": self.angle
+        }
+    
+    def from_dict(self, data):
+        self.rect.x = data["x"]
+        self.rect.y = data["y"]
+        self.velocity = data["velocity"]
+        self.angle = data["angle"]

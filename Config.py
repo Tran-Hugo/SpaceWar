@@ -15,7 +15,6 @@ class Config():
         return Config.__instance
 
     def __init__(self):
-        print("init")
         if Config.__instance != None:
             raise Exception("This class is a singleton!")
         else:

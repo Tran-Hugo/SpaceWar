@@ -8,14 +8,19 @@ import pygame
 import math
 from Config import Config
 from entities.Bullet import Bullet
+from Server import Server
+from network import Network
 
 class MainScene(BaseScene):
     def __init__(self):
         BaseScene.__init__(self)
         pygame.font.init()
         self.config = Config.getInstance()
+        self.network = Network()
         self.score = Score()
         self.ship = Ship()
+        self.players = []
+
         self.heart = Heart()
         self.rocks = [Rock(200,250),Rock(300,150),Rock(500,300)]
         self.explosion_group = pygame.sprite.Group()
@@ -41,6 +46,7 @@ class MainScene(BaseScene):
                     self.ship.shoot()
 
     def Update(self):
+        self.players = self.network.send(self.ship.to_dict())
         if self.ship is not None:
             self.heart.update_life(self.ship)
             self.ship.move()
@@ -53,12 +59,22 @@ class MainScene(BaseScene):
             if self.ship.lifes <= 0:
                 self.heart.update_life(self.ship)
                 self.remove_ship()
+            for ship in self.players:
+                new_ship = Ship()
+                new_ship.from_dict(ship)
+                new_ship.move()
+                self.players[self.players.index(ship)] = new_ship
         else :
             for rock in self.rocks:
                 rock.float()
                 rock.check_collision([])
                 rock.check_bullet_collision([], self.rocks, self.explosion_group, self.score)
             self.explosion_group.update()
+            for ship in self.players:
+                new_ship = Ship()
+                new_ship.from_dict(ship)
+                new_ship.move()
+                self.players[self.players.index(ship)] = new_ship
         if len(self.rocks) == 0:
             for i in range(random.randint(2,5)):
                 x = random.randint(0,500)
@@ -84,6 +100,13 @@ class MainScene(BaseScene):
             text = font.render("You Lose", True, (255, 255, 255))
             text_rect = text.get_rect(center=(self.config.getWidth() / 2, self.config.getHeight() / 2))
             screen.blit(text, text_rect)
+            for ship in self.players:
+                ship.draw(screen)
+                for bullet in ship.bullets:
+                    bullet.move()
+                    bullet.draw()
+                    if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                        ship.bullets.remove(bullet)
         else:
             self.ship.draw(screen)
             for bullet in self.ship.bullets:
@@ -94,3 +117,10 @@ class MainScene(BaseScene):
             for rock in self.rocks:
                 rock.draw(screen)
             self.explosion_group.draw(screen)
+            for ship in self.players:
+                ship.draw(screen)
+                for bullet in ship.bullets:
+                    bullet.move()
+                    bullet.draw()
+                    if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                        ship.bullets.remove(bullet)
