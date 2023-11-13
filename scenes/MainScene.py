@@ -61,7 +61,13 @@ class MainScene(BaseScene):
             self.explosion_group.update()
         if len(self.rocks) == 0:
             for i in range(random.randint(2,5)):
-                self.rocks.append(Rock(random.randint(0,500),random.randint(0,500)))
+                x = random.randint(0,500)
+                y = random.randint(0,500)
+                print(self.ship.x, self.ship.y)
+                if(self.ship.x <= x <= self.ship.x + 60 and self.ship.y <= y <= self.ship.y + 60):
+                    x = self.ship.rect.x + 100
+                    y = self.ship.rect.y + 100
+                self.rocks.append(Rock(x, y))
 
     def remove_ship(self):
         self.ship = None
