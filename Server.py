@@ -24,7 +24,7 @@ class Server:
     def connect(self):
         conn, addr = self.socket.accept()
         print("Connected to:", addr)
-        self.players.append(Ship())
+        self.players.append(Ship().to_dict())
 
         start_new_thread(self.threaded_client, (conn, self.PLAYER))
         self.PLAYER += 1
