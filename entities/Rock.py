@@ -8,10 +8,13 @@ from Config import Config
 from entities.Explosion import Explosion
 
 class Rock():
-    def __init__(self, x, y):
+    def __init__(self, x, y, size=1):
         self.rock_img = pygame.image.load(os.path.join("assets", "rock.png"))
         self.surf = pygame.Surface((60, 60))
-        self.rock = pygame.transform.smoothscale(self.rock_img, (60, 60))
+        self.original_size = 60  # Taille originale du rocher
+        self.size = size  # Facteur de taille, 1 par défaut (taille normale)
+        self.rock = pygame.transform.smoothscale(self.rock_img, (int(self.original_size * size), int(self.original_size * size)))
+        # self.rock = pygame.transform.smoothscale(self.rock_img, (60, 60))
         self.rect = self.rock.get_rect(center= (x,y))
         self.x, self.y = x, y
         self.rot = 5
@@ -61,6 +64,9 @@ class Rock():
                     explosion = Explosion(self.x,self.y)
                     explosion_group.add(explosion)
                     rocks.remove(self)
+                    if self.size > 0.5:
+                        for i in range(3):
+                            rocks.append(Rock(self.x,self.y,self.size/2))
         return False
     
     def draw(self,screen):

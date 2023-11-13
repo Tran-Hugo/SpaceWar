@@ -1,7 +1,9 @@
+import math
 import time
 import pygame
 import os
 from Config import Config
+from entities.Bullet import Bullet
 
 class Ship():
     def __init__(self):
@@ -21,6 +23,13 @@ class Ship():
     
     def move(self):
         self.rect.move_ip(self.velocity[0] * self.speed, self.velocity[1] * self.speed)
+
+    def shoot(self):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        opposite = mouse_y - self.rect.y
+        adjacent = mouse_x - self.rect.x
+        angle = math.atan2(opposite, adjacent)
+        self.bullets.append(Bullet(self.rect.x, self.rect.y, angle))
     
     def lose_life(self):
         self.lifes -=1
