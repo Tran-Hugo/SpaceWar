@@ -1,6 +1,8 @@
 import socket
 import pickle
 
+from entities.Rock import Rock
+
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -12,14 +14,21 @@ class Network:
     def connect(self):
         try:
             self.client.connect(self.addr)
-            return pickle.loads(self.client.recv(20480))
+            data = pickle.loads(self.client.recv(2048))
+            print("Received: ", data)
+            # if isinstance(data, list) and all(isinstance(rock, Rock) for rock in data):
+            #     self.rocks = data
+            #     print("Received rocks:", self.rocks)
+            # else:
+            #     print("Received unexpected data:", data)
+            return data
         except socket.error as e:
             print(e)
     
     def send(self, data):
         try:
             self.client.send(pickle.dumps(data))
-            return pickle.loads(self.client.recv(20480))
+            return pickle.loads(self.client.recv(2048))
         except socket.error as e:
             print(e)
 

@@ -23,13 +23,16 @@ class Config():
             Config.__height = 480
             Config.__fps = 60
             Config.__screen = pygame.display.set_mode((Config.__width, Config.__height))
-    def getWidth(self):
-        return self.__width
+    
+    @staticmethod
+    def getWidth():
+        return Config.__width
     def setWidth(self, width):
         self.__width = width
 
-    def getHeight(self):
-        return self.__height
+    @staticmethod
+    def getHeight():
+        return Config.__height
     def getFps(self):
         return self.__fps
     

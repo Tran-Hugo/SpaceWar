@@ -21,4 +21,4 @@ class EntryScene(BaseScene):
         # For the sake of brevity, the title scene is a blank red screen
         screen.fill((0, 0, 0))
         # print(screen)
-        screen.blit(self.text, ((self.config.getWidth() / 2) - (self.text.get_width() / 2), self.config.getHeight() / 2))
+        screen.blit(self.text, ((Config.getWidth() / 2) - (self.text.get_width() / 2), Config.getHeight() / 2))

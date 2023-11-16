@@ -7,9 +7,8 @@ from entities.Bullet import Bullet
 
 class Ship():
     def __init__(self):
-        self.config = Config.getInstance()
         self.image_filename = os.path.join("assets", "player.png")
-        self.rect = self.get_image().get_rect(x=self.config.getWidth() / 2, y=self.config.getHeight() / 2)
+        self.rect = self.get_image().get_rect(x=Config.getWidth() / 2, y=Config.getHeight() / 2)
         self.speed = 4
         self.velocity = [0,0]
         self.bullets = []

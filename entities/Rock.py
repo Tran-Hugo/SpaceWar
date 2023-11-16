@@ -1,4 +1,5 @@
 import random
+import uuid
 import pygame
 import os
 import math
@@ -8,23 +9,27 @@ from Config import Config
 from entities.Explosion import Explosion
 
 class Rock():
-    def __init__(self, x, y, size=1):
+    def __init__(self, data):
+        if "uuid" in data:
+            self.uuid = data["uuid"]
+        else:
+            self.uuid = str(uuid.uuid4())
         self.rock_img = pygame.image.load(os.path.join("assets", "rock.png"))
         self.surf = pygame.Surface((60, 60))
         self.original_size = 60  # Taille originale du rocher
-        self.size = size  # Facteur de taille, 1 par défaut (taille normale)
-        self.rock = pygame.transform.smoothscale(self.rock_img, (int(self.original_size * size), int(self.original_size * size)))
+        self.size = data["size"]  # Facteur de taille, 1 par défaut (taille normale)
+        self.rock = pygame.transform.smoothscale(self.rock_img, (int(self.original_size * data['size']), int(self.original_size * data['size'])))
         # self.rock = pygame.transform.smoothscale(self.rock_img, (60, 60))
-        self.rect = self.rock.get_rect(center= (x,y))
-        self.x, self.y = x, y
+        self.rect = self.rock.get_rect(center= (data["x"],data["y"]))
+        self.x, self.y = data["x"], data["y"]
         self.rot = 5
 
-        self.speed = random.uniform(1, 3)
-        self.angle = random.uniform(0, 2 * math.pi)
+        self.speed = data["speed"]
+        self.angle = data["angle"]
 
-        self.config = Config.getInstance()
-        self.screen_width = self.config.getWidth()
-        self.screen_height = self.config.getHeight()
+        # self.config = Config.getInstance()
+        self.screen_width = Config.getWidth()
+        self.screen_height = Config.getHeight()
 
     def rotate(self):
         rotated_image = pygame.transform.rotate(self.rock, self.rot)
@@ -71,6 +76,26 @@ class Rock():
                     else:
                         score.add(200)
         return False
+    
+    def to_dict(self):
+        res = {
+            "uuid": self.uuid,
+            "x": self.x,
+            "y": self.y,
+            "size": self.size,
+            "speed": self.speed,
+            "angle": self.angle,
+        }
+        return res
+    
+    def from_dict(self, data):
+        self.uuid = data["uuid"]
+        self.x = data["x"]
+        self.y = data["y"]
+        self.size = data["size"]
+        self.speed = data["speed"]
+        self.angle = data["angle"]
+        self.rect = self.rock.get_rect(center= (self.x,self.y))
     
     def draw(self,screen):
         rotated_image, new_rect = self.rotate()

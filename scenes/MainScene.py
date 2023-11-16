@@ -15,28 +15,34 @@ class MainScene(BaseScene):
     def __init__(self):
         BaseScene.__init__(self)
         pygame.font.init()
+        self.rocks = []
+        self.players = []
         self.config = Config.getInstance()
         self.network = Network()
+        self.init_game()
         self.score = Score()
         self.ship = Ship()
-        self.players = []
-
+        print(self.ship.to_dict())
         self.heart = Heart()
-        self.rocks = [Rock(200,250),Rock(300,150),Rock(500,300)]
         self.explosion_group = pygame.sprite.Group()
     
+    def init_game(self):
+        initial_data = self.network.getObj()
+        for rock in initial_data['rocks']:
+            self.rocks.append(Rock(rock))
+        self.players = initial_data['players']
     def ProcessInput(self, events, pressed_keys):
         if self.ship is not None:
             if pressed_keys[pygame.K_z] and self.ship.rect.y > 0 :
                 self.ship.velocity[1] = -1
-            elif pressed_keys[pygame.K_s] and self.ship.rect.y < self.config.getHeight() - self.ship.rect.height :
+            elif pressed_keys[pygame.K_s] and self.ship.rect.y < Config.getHeight() - self.ship.rect.height :
                 self.ship.velocity[1] = 1
             else:
                 self.ship.velocity[1] = 0
 
             if pressed_keys[pygame.K_q] and self.ship.rect.x > 0 :
                 self.ship.velocity[0] = -1
-            elif pressed_keys[pygame.K_d] and self.ship.rect.x < self.config.getWidth() - self.ship.rect.width:
+            elif pressed_keys[pygame.K_d] and self.ship.rect.x < Config.getWidth() - self.ship.rect.width:
                 self.ship.velocity[0] = 1
             else:
                 self.ship.velocity[0] = 0
@@ -46,16 +52,26 @@ class MainScene(BaseScene):
                     self.ship.shoot()
 
     def Update(self):
-        self.players = self.network.send(self.ship.to_dict())
+        state = self.network.send(self.ship.to_dict())
+        updated_rocks = state['rocks']
+        self.players = state['players']
+        # for rock, updated_rock in zip(self.rocks, updated_rocks):
+        # for updated_rock in updated_rocks:
+        #     # rock.from_dict(updated_rock)
+        #     self.rocks[self.rocks.index(updated_rock)].from_dict(updated_rock)
+        for updated_rock in updated_rocks:
+            for rock in self.rocks:
+                if rock.uuid == updated_rock['uuid']:
+                    rock.from_dict(updated_rock)
         if self.ship is not None:
             self.heart.update_life(self.ship)
             self.ship.move()
-            for rock in self.rocks:
-                rock.float()
-                if rock.check_collision([self.ship]):
-                    print("lifes = "+ str(self.ship.lifes))
-                rock.check_bullet_collision([self.ship], self.rocks, self.explosion_group, self.score)
-            self.explosion_group.update()
+            # for rock in self.rocks:
+            #     rock.float()
+            #     if rock.check_collision([self.ship]):
+            #         print("lifes = "+ str(self.ship.lifes))
+            #     rock.check_bullet_collision([self.ship], self.rocks, self.explosion_group, self.score)
+            # self.explosion_group.update()
             if self.ship.lifes <= 0:
                 self.heart.update_life(self.ship)
                 self.remove_ship()
@@ -65,11 +81,11 @@ class MainScene(BaseScene):
                 new_ship.move()
                 self.players[self.players.index(ship)] = new_ship
         else :
-            for rock in self.rocks:
-                rock.float()
-                rock.check_collision([])
-                rock.check_bullet_collision([], self.rocks, self.explosion_group, self.score)
-            self.explosion_group.update()
+            # for rock in self.rocks:
+            #     rock.float()
+            #     rock.check_collision([])
+            #     rock.check_bullet_collision([], self.rocks, self.explosion_group, self.score)
+            # self.explosion_group.update()
             for ship in self.players:
                 new_ship = Ship()
                 new_ship.from_dict(ship)
@@ -90,29 +106,27 @@ class MainScene(BaseScene):
 
     def Render(self, screen):
         screen.fill((0, 0, 0))
-        self.score.draw()
-        self.heart.draw(screen)
         if self.ship is None:
             for rock in self.rocks:
                 rock.draw(screen)
             self.explosion_group.draw(screen)
             font = pygame.font.Font(None, 36)
             text = font.render("You Lose", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(self.config.getWidth() / 2, self.config.getHeight() / 2))
+            text_rect = text.get_rect(center=(Config.getWidth() / 2, Config.getHeight() / 2))
             screen.blit(text, text_rect)
             for ship in self.players:
                 ship.draw(screen)
                 for bullet in ship.bullets:
                     bullet.move()
                     bullet.draw()
-                    if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                    if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
                         ship.bullets.remove(bullet)
         else:
             self.ship.draw(screen)
             for bullet in self.ship.bullets:
                 bullet.move()
                 bullet.draw()
-                if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
                     self.ship.bullets.remove(bullet)
             for rock in self.rocks:
                 rock.draw(screen)
@@ -122,5 +136,9 @@ class MainScene(BaseScene):
                 for bullet in ship.bullets:
                     bullet.move()
                     bullet.draw()
-                    if bullet.rect.x < 0 or bullet.rect.x > self.config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > self.config.getHeight():
+                    if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
                         ship.bullets.remove(bullet)
+        self.heart.draw(screen)
+        self.score.draw()
+
+        
