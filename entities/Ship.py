@@ -1,12 +1,18 @@
 import math
 import time
+import uuid
 import pygame
 import os
 from Config import Config
 from entities.Bullet import Bullet
 
 class Ship():
-    def __init__(self):
+    def __init__(self, data= None):
+        if data is not None:
+            # print("data = " + str(data))
+            self.uuid = data["uuid"]
+        else:
+            self.uuid = str(uuid.uuid4())
         self.image_filename = os.path.join("assets", "player.png")
         self.rect = self.get_image().get_rect(x=Config.getWidth() / 2, y=Config.getHeight() / 2)
         self.speed = 4
@@ -62,6 +68,7 @@ class Ship():
     
     def to_dict(self):
         res = {
+            "uuid": self.uuid,
             "x": self.rect.x,
             "y": self.rect.y,
             "speed": self.speed,
