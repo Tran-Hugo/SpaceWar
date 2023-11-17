@@ -101,5 +101,5 @@ class Rock():
     
     def draw(self,screen):
         rotated_image, new_rect = self.rotate()
-        pygame.draw.rect(screen, (255, 0, 0), self.rect, 1) # debug
+        # pygame.draw.rect(screen, (255, 0, 0), self.rect, 1) # debug
         screen.blit(rotated_image, new_rect)

@@ -8,13 +8,14 @@ import pickle
 from Config import Config
 from entities.Rock import Rock
 from entities.Ship import Ship
+from entities.Bullet import Bullet
 
 class Server:
     MAX_PLAYERS = 2
     PLAYER = 0
     
     def __init__(self):
-        self.server = "localhost" #192.168.1.24
+        self.server = "localhost" #192.168.1.24 | 192.168.1.123
         self.port = 5555
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.players = []
@@ -36,13 +37,14 @@ class Server:
     def connect(self):
         conn, addr = self.socket.accept()
         print("Connected to:", addr)
-        self.players.append(Ship())
-        if self.PLAYER == 0:
+        new_player = Ship()
+        self.players.append(new_player)
+        if len(self.rocks) == 0:
             self.rocks = []
             self.rocks.append(Rock({'x':100,'y':100, 'size':1, 'speed': random.uniform(1, 6), 'angle': random.uniform(0, 2 * math.pi)}))
             self.rocks.append(Rock({'x':300,'y':200, 'size':1, 'speed': random.uniform(1, 6), 'angle': random.uniform(0, 2 * math.pi)}))
             self.rocks.append(Rock({'x':700,'y':300, 'size':1, 'speed': random.uniform(1, 6), 'angle': random.uniform(0, 2 * math.pi)}))
-        start_new_thread(self.threaded_client, (conn, self.PLAYER))
+        start_new_thread(self.threaded_client, (conn, new_player))
         self.PLAYER += 1
 
     def update_main_thread(self):
@@ -71,19 +73,20 @@ class Server:
         # conn.send(pickle.dumps(self.players[player]))
         reply = ""
         while True:
-            rock_dicts = []
-            ship_dicts = []
-            for rock in self.rocks:
-                rock_dicts.append(rock.to_dict())
-            for ship in self.players:
-                ship_dicts.append(ship.to_dict())
             try:
                 try:
                     data = pickle.loads(conn.recv(100000))
                 except EOFError as e:
-                    print(e)
+                    print('Error :', e)
                     break
 
+                if ('event' in data and data['event'] == 'shot'):
+                    print("Shot")
+                    for player in self.players:
+                        if player.uuid == data['player_uuid']:
+                            player.bullets.append(Bullet(player.rect.x, player.rect.y, data['bullet_angle']))
+                            break
+                
                 if ('event' in data and data['event'] == 'move'):
                     # find the ship by its uuid
                     for ship in self.players:
@@ -108,6 +111,17 @@ class Server:
                 #     shipId = ship.uuid
                 #     if ship.uuid == data['uuid']:
                 #         ship.from_dict(data)
+                for player in self.players:
+                    for bullet in player.bullets:
+                        bullet.move()
+                        if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
+                            player.bullets.remove(bullet)
+                rock_dicts = []
+                ship_dicts = []
+                for rock in self.rocks:
+                    rock_dicts.append(rock.to_dict())
+                for ship in self.players:
+                    ship_dicts.append(ship.to_dict())
 
                 if not data:
                     print("Disconnected")
@@ -119,10 +133,10 @@ class Server:
                 # print(f"Taille des données à envoyer : {len(pickle.dumps(reply))} octets")
                 conn.sendall(pickle.dumps(reply))
             except Exception as e:
-                print(e)
+                print('Error :', e)
                 break
 
-        self.players.pop(player)
+        self.players.remove(player)
         self.PLAYER -= 1
         print("Lost connection")
         conn.close()

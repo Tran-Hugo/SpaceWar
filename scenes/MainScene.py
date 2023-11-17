@@ -5,7 +5,6 @@ from scenes.BaseScene import BaseScene
 from entities.Ship import Ship
 import pygame
 from Config import Config
-from entities.Bullet import Bullet
 from network import Network
 
 class MainScene(BaseScene):
@@ -46,7 +45,7 @@ class MainScene(BaseScene):
                 
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.ship.shoot()
+                    self.ship.shoot(self.network)
 
     def Update(self):
         state = self.network.send({"event": "update"})
@@ -85,7 +84,8 @@ class MainScene(BaseScene):
         self.explosion_group.draw(screen)
         for ship in self.players:
             ship.draw(screen)
-               
+            for bullet in ship.bullets:
+                    bullet.draw()
         self.heart.draw(screen)
         self.score.draw()
 

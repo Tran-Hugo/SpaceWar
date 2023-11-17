@@ -25,10 +25,13 @@ def run(fps, starting_scene):
                     active_scene.Terminate()
                 else:
                     filtered_events.append(event)
-            active_scene.handling_events()
-            active_scene.ProcessInput(filtered_events, pressed_keys)
-            active_scene.Update()
-            active_scene.Render(screen)
+            try: 
+                active_scene.handling_events()
+                active_scene.ProcessInput(filtered_events, pressed_keys)
+                active_scene.Update()
+                active_scene.Render(screen)
+            except Exception as e:
+                print(e)
 
             active_scene = active_scene.next
 

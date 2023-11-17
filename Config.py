@@ -36,9 +36,10 @@ class Config():
     def getFps(self):
         return self.__fps
     
-
-    def getScreen(self):
-        return self.__screen
+    @staticmethod
+    def getScreen():
+        return Config.__screen
+    
     def setScreen(self, screen):
         self.__screen = screen
     def regenerateScreen(self):
