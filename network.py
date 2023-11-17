@@ -6,7 +6,7 @@ from entities.Rock import Rock
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server = "localhost" # 192.168.1.24
+        self.server = "192.168.1.123" # 192.168.1.24
         self.port = 5555
         self.addr = (self.server, self.port)
         self.obj = self.connect()
@@ -14,7 +14,7 @@ class Network:
     def connect(self):
         try:
             self.client.connect(self.addr)
-            data = pickle.loads(self.client.recv(2048))
+            data = pickle.loads(self.client.recv(104824))
             print("Received: ", data)
             # if isinstance(data, list) and all(isinstance(rock, Rock) for rock in data):
             #     self.rocks = data
@@ -28,7 +28,7 @@ class Network:
     def send(self, data):
         try:
             self.client.send(pickle.dumps(data))
-            return pickle.loads(self.client.recv(2048))
+            return pickle.loads(self.client.recv(104824))
         except socket.error as e:
             print(e)
 

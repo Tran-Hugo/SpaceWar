@@ -23,12 +23,30 @@ class Ship():
     def move(self):
         self.rect.move_ip(self.velocity[0] * self.speed, self.velocity[1] * self.speed)
 
-    def shoot(self):
+    def shoot(self, network):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         opposite = mouse_y - self.rect.y
         adjacent = mouse_x - self.rect.x
         angle = math.atan2(opposite, adjacent)
-        self.bullets.append(Bullet(self.rect.x, self.rect.y, angle))
+        bullets = network.send({'event': 'shot', 'player_uuid' : 0, 'bullet_angle': angle})['players'][0]['bullets']
+        if len(self.bullets) == 0:
+            for bullet in bullets:
+                new_bullet = Bullet(bullet['x'], bullet['y'], bullet['angle'])
+                new_bullet.from_dict(bullet)
+                self.bullets.append(new_bullet)
+                continue
+
+        for bullet in bullets:
+            for self_bullet in self.bullets:
+                if bullet['uuid'] == self_bullet.uuid:
+                    break
+                else:
+                    new_bullet = Bullet(bullet['x'], bullet['y'], bullet['angle'])
+                    new_bullet.from_dict(bullet)
+                    self.bullets.append(new_bullet)
+                    print('Test 1', self.bullets)
+                    break
+
     
     def lose_life(self):
         self.lifes -=1
@@ -78,4 +96,20 @@ class Ship():
         self.rect.y = data["y"]
         self.speed = data["speed"]
         self.velocity = data["velocity"]
-        self.bullets = data["bullets"]
+        if len(self.bullets) == 0:
+            for bullet in data["bullets"]:
+                new_bullet = Bullet(bullet['x'], bullet['y'], bullet['angle'])
+                new_bullet.from_dict(bullet)
+                self.bullets.append(new_bullet)
+                continue
+        else : 
+            for bullet in data["bullets"]:
+                for self_bullet in self.bullets:
+                    if bullet['uuid'] == self_bullet.uuid:
+                        self_bullet.from_dict(bullet)
+                        break
+                    else:
+                        new_bullet = Bullet(bullet['x'], bullet['y'], bullet['angle'])
+                        new_bullet.from_dict(bullet)
+                        self.bullets.append(new_bullet)
+

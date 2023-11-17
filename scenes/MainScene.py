@@ -7,8 +7,6 @@ from entities.Ship import Ship
 import pygame
 import math
 from Config import Config
-from entities.Bullet import Bullet
-from Server import Server
 from network import Network
 
 class MainScene(BaseScene):
@@ -22,7 +20,6 @@ class MainScene(BaseScene):
         self.init_game()
         self.score = Score()
         self.ship = Ship()
-        print(self.ship.to_dict())
         self.heart = Heart()
         self.explosion_group = pygame.sprite.Group()
     
@@ -49,7 +46,7 @@ class MainScene(BaseScene):
 
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.ship.shoot()
+                    self.ship.shoot(self.network)
 
     def Update(self):
         state = self.network.send(self.ship.to_dict())
@@ -80,6 +77,7 @@ class MainScene(BaseScene):
                 new_ship.from_dict(ship)
                 new_ship.move()
                 self.players[self.players.index(ship)] = new_ship
+                print("players", self.players[self.players.index(new_ship)].to_dict())
         else :
             # for rock in self.rocks:
             #     rock.float()
@@ -95,7 +93,6 @@ class MainScene(BaseScene):
             for i in range(random.randint(2,5)):
                 x = random.randint(0,500)
                 y = random.randint(0,500)
-                print(self.ship.x, self.ship.y)
                 if(self.ship.x <= x <= self.ship.x + 60 and self.ship.y <= y <= self.ship.y + 60):
                     x = self.ship.rect.x + 100
                     y = self.ship.rect.y + 100
@@ -124,7 +121,9 @@ class MainScene(BaseScene):
         else:
             self.ship.draw(screen)
             for bullet in self.ship.bullets:
+                print("ORIGINAL BEFORE", bullet.to_dict())
                 bullet.move()
+                print("ORIGINAL AFTER", bullet.to_dict())
                 bullet.draw()
                 if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
                     self.ship.bullets.remove(bullet)
@@ -134,10 +133,13 @@ class MainScene(BaseScene):
             for ship in self.players:
                 ship.draw(screen)
                 for bullet in ship.bullets:
+                    print("NEW BEFORE", bullet.to_dict())
                     bullet.move()
+                    print("NEW AFTER", bullet.to_dict())
                     bullet.draw()
                     if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
                         ship.bullets.remove(bullet)
+                # self.ship = ship # a enlever apres modif de hugo
         self.heart.draw(screen)
         self.score.draw()
 
