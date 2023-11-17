@@ -57,7 +57,8 @@ class Rock():
     def check_collision(self, ships):
         for ship in ships:
             if self.rect.colliderect(ship.rect) and ship.invincible == False:
-                ship.lose_life()          
+                ship.lose_life()
+                       
                 return True
         return False
     
@@ -99,5 +100,5 @@ class Rock():
     
     def draw(self,screen):
         rotated_image, new_rect = self.rotate()
-        # pygame.draw.rect(self.config.getScreen(), (255, 0, 0), self.rect, 1) # debug
+        # pygame.draw.rect(screen, (255, 0, 0), self.rect, 1) # debug
         screen.blit(rotated_image, new_rect)

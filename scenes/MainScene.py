@@ -19,7 +19,7 @@ class MainScene(BaseScene):
         self.network = Network()
         self.init_game()
         self.score = Score()
-        self.ship = Ship()
+        # self.ship = Ship()
         self.heart = Heart()
         self.explosion_group = pygame.sprite.Group()
     
@@ -27,19 +27,25 @@ class MainScene(BaseScene):
         initial_data = self.network.getObj()
         for rock in initial_data['rocks']:
             self.rocks.append(Rock(rock))
-        self.players = initial_data['players']
+        for player in initial_data['players']:
+            self.ship = Ship(player)
+            self.players.append(self.ship)
+
     def ProcessInput(self, events, pressed_keys):
         if self.ship is not None:
             if pressed_keys[pygame.K_z] and self.ship.rect.y > 0 :
-                self.ship.velocity[1] = -1
+                state = self.network.send({"event": "move", "direction": "up", "uuid": self.ship.uuid})
+
             elif pressed_keys[pygame.K_s] and self.ship.rect.y < Config.getHeight() - self.ship.rect.height :
-                self.ship.velocity[1] = 1
+                state = self.network.send({"event": "move", "direction": "down", "uuid": self.ship.uuid})
             else:
                 self.ship.velocity[1] = 0
 
             if pressed_keys[pygame.K_q] and self.ship.rect.x > 0 :
+                state = self.network.send({"event": "move", "direction": "left", "uuid": self.ship.uuid})
                 self.ship.velocity[0] = -1
             elif pressed_keys[pygame.K_d] and self.ship.rect.x < Config.getWidth() - self.ship.rect.width:
+                state = self.network.send({"event": "move", "direction": "right", "uuid": self.ship.uuid})
                 self.ship.velocity[0] = 1
             else:
                 self.ship.velocity[0] = 0
@@ -49,9 +55,17 @@ class MainScene(BaseScene):
                     self.ship.shoot(self.network)
 
     def Update(self):
-        state = self.network.send(self.ship.to_dict())
+        ship_dict = self.ship.to_dict()
+        # print(ship_dict)
+        # state = self.network.send(self.ship.to_dict())
+        state = self.network.send({"test": "input"})
+        # print("state = " + str(state))
         updated_rocks = state['rocks']
-        self.players = state['players']
+        updated_players = state['players']
+        if len(self.players) < len(updated_players):
+            for updated_ship in updated_players:
+                if updated_ship['uuid'] not in [ship.uuid for ship in self.players]:
+                    self.players.append(Ship(updated_ship))
         # for rock, updated_rock in zip(self.rocks, updated_rocks):
         # for updated_rock in updated_rocks:
         #     # rock.from_dict(updated_rock)
@@ -60,6 +74,12 @@ class MainScene(BaseScene):
             for rock in self.rocks:
                 if rock.uuid == updated_rock['uuid']:
                     rock.from_dict(updated_rock)
+
+        for ship in self.players:
+            for updated_ship in updated_players:
+                if ship.uuid == updated_ship['uuid']:
+                    ship.from_dict(updated_ship)
+            
         if self.ship is not None:
             self.heart.update_life(self.ship)
             self.ship.move()
@@ -72,12 +92,12 @@ class MainScene(BaseScene):
             if self.ship.lifes <= 0:
                 self.heart.update_life(self.ship)
                 self.remove_ship()
-            for ship in self.players:
-                new_ship = Ship()
-                new_ship.from_dict(ship)
-                new_ship.move()
-                self.players[self.players.index(ship)] = new_ship
-                print("players", self.players[self.players.index(new_ship)].to_dict())
+            # for ship in self.players:
+            #     new_ship = Ship()
+            #     new_ship.from_dict(ship)
+                # ship.move()
+            #     self.players[self.players.index(ship)] = new_ship
+            #     print(ship)
         else :
             # for rock in self.rocks:
             #     rock.float()
@@ -119,27 +139,24 @@ class MainScene(BaseScene):
                     if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
                         ship.bullets.remove(bullet)
         else:
-            self.ship.draw(screen)
-            for bullet in self.ship.bullets:
-                print("ORIGINAL BEFORE", bullet.to_dict())
-                bullet.move()
-                print("ORIGINAL AFTER", bullet.to_dict())
-                bullet.draw()
-                if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
-                    self.ship.bullets.remove(bullet)
+            # self.ship.draw(screen)
+            # for bullet in self.ship.bullets:
+            #     bullet.move()
+            #     bullet.draw()
+            #     if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
+            #         self.ship.bullets.remove(bullet)
             for rock in self.rocks:
                 rock.draw(screen)
             self.explosion_group.draw(screen)
+            # self.ship.draw(screen)
             for ship in self.players:
+                # print("ship = " + ship.to_dict())
                 ship.draw(screen)
-                for bullet in ship.bullets:
-                    print("NEW BEFORE", bullet.to_dict())
-                    bullet.move()
-                    print("NEW AFTER", bullet.to_dict())
-                    bullet.draw()
-                    if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
-                        ship.bullets.remove(bullet)
-                # self.ship = ship # a enlever apres modif de hugo
+                # for bullet in ship.bullets:
+                #     bullet.move()
+                #     bullet.draw()
+                #     if bullet.rect.x < 0 or bullet.rect.x > Config.getWidth() or bullet.rect.y < 0 or bullet.rect.y > Config.getHeight():
+                #         ship.bullets.remove(bullet)
         self.heart.draw(screen)
         self.score.draw()
 
