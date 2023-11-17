@@ -65,7 +65,8 @@ class MainScene(BaseScene):
             for updated_ship in updated_players:
                 if ship.uuid == updated_ship['uuid']:
                     ship.from_dict(updated_ship)
-                    self.heart.update_life(ship)
+                    if self.ship.uuid == ship.uuid:
+                        self.heart.update_life(ship)
 
         # if len(self.rocks) == 0:
         #     for i in range(random.randint(2,5)):
