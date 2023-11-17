@@ -25,6 +25,7 @@ class Ship():
         self.blink_interval = 0.2  # Intervalle de clignotement en secondes
         self.last_blink_time = 0
         self.visible = True
+        self.invincible_i = 0
     
     def move(self):
         self.rect.move_ip(self.velocity[0] * self.speed, self.velocity[1] * self.speed)
@@ -51,6 +52,7 @@ class Ship():
             self.last_blink_time = time.time()
 
     def update_invincibility(self):
+        self.visible = not self.visible
         if self.invincible and time.time() - self.invincible_timer >= self.invincible_duration:
             self.invincible = False
 
@@ -59,11 +61,11 @@ class Ship():
         current_time = time.time()
         if self.invincible and current_time - self.last_blink_time >= self.blink_interval:
             self.last_blink_time = current_time
-            self.visible = not self.visible
 
     def draw(self,screen):
         self.update_invincibility()
         self.update_blink()
+        # pygame.draw.rect(screen, (255, 0, 0), self.rect, 1) #Debug hitbox
 
         if not self.invincible or (self.invincible and self.visible):
             screen.blit(self.get_image(), self.rect)
@@ -78,7 +80,12 @@ class Ship():
             "y": self.rect.y,
             "speed": self.speed,
             "velocity": self.velocity,
-            "bullets": []
+            "bullets": [],
+            "lifes": self.lifes,
+            "invincible": self.invincible,
+            "invincible_timer": self.invincible_timer,
+            "last_blink_time": self.last_blink_time,
+            "visible": self.visible,
         }
 
         for bullet in self.bullets:
@@ -90,6 +97,11 @@ class Ship():
         self.rect.y = data["y"]
         self.speed = data["speed"]
         self.velocity = data["velocity"]
+        self.lifes = data["lifes"]
+        self.invincible = data["invincible"]
+        self.invincible_timer = data["invincible_timer"]
+        self.last_blink_time = data["last_blink_time"]
+        self.visible = data["visible"]
 
         if len(self.bullets) == 0:
             for bullet in data["bullets"]:
@@ -115,4 +127,3 @@ class Ship():
                 new_bullet = Bullet(bullet['x'], bullet['y'], bullet['angle'])
                 new_bullet.from_dict(bullet)
                 self.bullets.append(new_bullet)
-
