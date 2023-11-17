@@ -39,19 +39,21 @@ class Server:
         self.players.append(Ship())
         if self.PLAYER == 0:
             self.rocks = []
-            self.rocks.append(Rock({'x':100,'y':100, 'size':1, 'speed': random.uniform(1, 3), 'angle': random.uniform(0, 2 * math.pi)}))
-            self.rocks.append(Rock({'x':300,'y':200, 'size':1, 'speed': random.uniform(1, 3), 'angle': random.uniform(0, 2 * math.pi)}))
-            self.rocks.append(Rock({'x':700,'y':300, 'size':1, 'speed': random.uniform(1, 3), 'angle': random.uniform(0, 2 * math.pi)}))
+            self.rocks.append(Rock({'x':100,'y':100, 'size':1, 'speed': random.uniform(1, 6), 'angle': random.uniform(0, 2 * math.pi)}))
+            self.rocks.append(Rock({'x':300,'y':200, 'size':1, 'speed': random.uniform(1, 6), 'angle': random.uniform(0, 2 * math.pi)}))
+            self.rocks.append(Rock({'x':700,'y':300, 'size':1, 'speed': random.uniform(1, 6), 'angle': random.uniform(0, 2 * math.pi)}))
         start_new_thread(self.threaded_client, (conn, self.PLAYER))
         self.PLAYER += 1
 
     def update_main_thread(self):
         while True:
-            with self.rocks_lock:
-                for rock in self.rocks:
-                    rock.float()
-                    rock.check_collision(self.players)
-            time.sleep(0.1)
+            for ship in self.players:
+                ship.update_invincibility()
+            # with self.rocks_lock:
+            for rock in self.rocks:
+                rock.float()
+                rock.check_collision(self.players)
+            time.sleep(0.05)
     
     def threaded_client(self, conn, player):
         rock_dicts = []
@@ -112,9 +114,9 @@ class Server:
                     break
                 else:
                     reply = {"players": ship_dicts, "rocks": rock_dicts}
-                    print("Received: ", data)
-                    print("Sending: ", reply)
-                print(f"Taille des données à envoyer : {len(pickle.dumps(reply))} octets")
+                #     print("Received: ", data)
+                #     print("Sending: ", reply)
+                # print(f"Taille des données à envoyer : {len(pickle.dumps(reply))} octets")
                 conn.sendall(pickle.dumps(reply))
             except Exception as e:
                 print(e)
