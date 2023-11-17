@@ -27,7 +27,7 @@ class Bullet():
         
     def draw(self):
         Config.getScreen().blit(self.img, self.rect)
-        pygame.draw.rect(Config.getScreen(), (255, 0, 0), self.rect, 1) # debug
+        # pygame.draw.rect(Config.getScreen(), (255, 0, 0), self.rect, 1) # debug
         # pygame.draw.line(Config.getScreen(), (0, 255, 0), pygame.math.Vector2(self.rect.x, self.rect.y), self.velocity, 1) # debug
 
     def to_dict(self):
@@ -40,6 +40,7 @@ class Bullet():
         }
     
     def from_dict(self, data):
+        self.uuid = data["uuid"]
         self.rect.x = data["x"]
         self.rect.y = data["y"]
         self.velocity = data["velocity"]
