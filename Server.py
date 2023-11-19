@@ -21,6 +21,8 @@ class Server:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.players = []
         self.rocks = []
+        self.score = 0
+        self.explosions = []
         self.rocks_lock = threading.Lock()
         self.players_lock = threading.Lock()
         self.update_thread = threading.Thread(target=self.update_main_thread)
@@ -64,6 +66,11 @@ class Server:
             for rock in self.rocks:
                 rock.float()
                 rock.check_collision(self.players)
+                res = rock.check_bullet_collision(self.players, self.rocks, self.score)
+                self.score = res['score']
+
+                for explosion in res['explosion']:
+                    self.explosions.append(explosion)
             time.sleep(0.05)
     
     def threaded_client(self, conn, player):
@@ -95,6 +102,12 @@ class Server:
                         if player.uuid == data['player_uuid']:
                             player.bullets.append(Bullet(player.rect.x, player.rect.y, data['bullet_angle']))
                             break
+                if ('event' in data and data['event'] == 'delete_explosion'):
+                    print("Delete explosion")
+                    for explosion in self.explosions:
+                        if explosion.uuid in data['explosion_uuid']:
+                            self.explosions.remove(explosion)
+                            break
                 
                 if ('event' in data and data['event'] == 'move'):
                     # find the ship by its uuid
@@ -114,7 +127,16 @@ class Server:
                             else:
                                 ship.velocity[0] = 0
                             ship.move()
-                
+                if ('event' in data and data['event'] == 'new_rocks'):
+                    for i in range(random.randint(2,5)):
+                        x = random.randint(0,500)
+                        y = random.randint(0,500)
+                        for player in self.players:
+                            if(player.rect.x <= x <= player.rect.x + 60 and player.rect.y <= y <= player.rect.y + 60):
+                                x = player.rect.x + 100
+                                y = player.rect.y + 100
+                        self.rocks.append(Rock({'x':x,'y':y, 'size':1, 'speed': random.uniform(1, 3), 'angle': random.uniform(0, 2 * math.pi)}))
+
                 if ('event' in data and data['event'] == 'quit'):
                     print("Quit")
                     for ship in self.players:
@@ -131,16 +153,25 @@ class Server:
 
                 rock_dicts = []
                 ship_dicts = []
+                explosion_dicts = []
                 for rock in self.rocks:
                     rock_dicts.append(rock.to_dict())
                 for ship in self.players:
                     ship_dicts.append(ship.to_dict())
 
+                for explosion in self.explosions:
+                    explosion_dicts.append(explosion.to_dict())
+
                 if not data:
                     print("Disconnected")
                     break
                 else:
-                    reply = {"players": ship_dicts, "rocks": rock_dicts}
+                    reply = {
+                        "players": ship_dicts, 
+                        "rocks": rock_dicts,
+                        "explosions": explosion_dicts,
+                        "score": self.score
+                    }
                     print("Received: ", data)
                     print("Sending: ", reply)
                 # print(f"Taille des données à envoyer : {len(pickle.dumps(reply))} octets")
