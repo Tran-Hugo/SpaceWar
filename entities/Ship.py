@@ -20,7 +20,7 @@ class Ship():
         self.bullets = []
         self.lifes = 3
         self.invincible = False
-        self.invincible_duration = 3
+        self.invincible_duration = 1
         self.invincible_timer = 0
         self.blink_interval = 0.2  # Intervalle de clignotement en secondes
         self.last_blink_time = 0
@@ -40,7 +40,6 @@ class Ship():
             if player['uuid'] == self.uuid:
                 self.from_dict(player)
                 break
-
     
     def lose_life(self):
         self.lifes -=1
@@ -93,6 +92,7 @@ class Ship():
         return res
     
     def from_dict(self, data):
+        self.uuid = data["uuid"]
         self.rect.x = data["x"]
         self.rect.y = data["y"]
         self.speed = data["speed"]

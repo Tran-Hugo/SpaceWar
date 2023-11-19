@@ -1,3 +1,4 @@
+import sys
 from entities.Heart import Heart
 from entities.Rock import Rock
 from entities.Score import Score
@@ -20,6 +21,7 @@ class MainScene(BaseScene):
         self.score = Score()
         self.heart = Heart()
         self.explosion_group = pygame.sprite.Group()
+        self.game_over = False
     
     def init_game(self):
         initial_data = self.network.getObj()
@@ -28,6 +30,7 @@ class MainScene(BaseScene):
         for player in initial_data['players']:
             self.ship = Ship(player)
             self.players.append(self.ship)
+
 
     def ProcessInput(self, events, pressed_keys):
         if self.ship is not None:
@@ -46,6 +49,10 @@ class MainScene(BaseScene):
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.ship.shoot(self.network)
+                if event.type == pygame.QUIT:
+                    self.network.send({"event": "quit","uuid": self.ship.uuid})
+                    pygame.quit()
+                    sys.exit()
 
     def Update(self):
         state = self.network.send({"event": "update"})
@@ -56,6 +63,21 @@ class MainScene(BaseScene):
                 if updated_ship['uuid'] not in [ship.uuid for ship in self.players]:
                     self.players.append(Ship(updated_ship))
 
+        if len(self.players) > len(updated_players):
+            players_to_remove = []
+            for ship in self.players:
+                if updated_players:
+                    for updated_ship in updated_players:
+                        if ship.uuid == updated_ship['uuid']:
+                            break
+                        else :
+                            players_to_remove.append(ship)
+                else:
+                    players_to_remove.append(ship)
+
+            for ship in players_to_remove:
+                self.players.remove(ship)
+
         for updated_rock in updated_rocks:
             for rock in self.rocks:
                 if rock.uuid == updated_rock['uuid']:
@@ -65,17 +87,10 @@ class MainScene(BaseScene):
             for updated_ship in updated_players:
                 if ship.uuid == updated_ship['uuid']:
                     ship.from_dict(updated_ship)
-                    if self.ship.uuid == ship.uuid:
+                    if self.ship.uuid == ship.uuid: #met à jour uniquement le vaisseau du joueur
+                        if ship.lifes == 0:
+                            self.game_over = True
                         self.heart.update_life(ship)
-
-        # if len(self.rocks) == 0:
-        #     for i in range(random.randint(2,5)):
-        #         x = random.randint(0,500)
-        #         y = random.randint(0,500)
-        #         if(self.ship.x <= x <= self.ship.x + 60 and self.ship.y <= y <= self.ship.y + 60):
-        #             x = self.ship.rect.x + 100
-        #             y = self.ship.rect.y + 100
-        #         self.rocks.append(Rock(x, y))
 
     def Render(self, screen):
         screen.fill((0, 0, 0))
@@ -89,5 +104,9 @@ class MainScene(BaseScene):
                     bullet.draw()
         self.heart.draw(screen)
         self.score.draw()
-
+        if self.game_over:
+            font = pygame.font.Font(None, 36)
+            text = font.render("You Lose", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(Config.getWidth() / 2, Config.getHeight() / 2))
+            screen.blit(text, text_rect)
         
