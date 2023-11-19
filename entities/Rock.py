@@ -56,9 +56,10 @@ class Rock():
 
     def check_collision(self, ships):
         for ship in ships:
+            # print(ship.invincible)
             if self.rect.colliderect(ship.rect) and ship.invincible == False:
                 ship.lose_life()
-                       
+                print("COLLISIONNNNNNN")
                 return True
         return False
     
