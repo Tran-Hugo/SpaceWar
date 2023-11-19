@@ -62,21 +62,23 @@ class Rock():
                 return True
         return False
     
-    def check_bullet_collision(self, ships, rocks, explosion_group, score):
+    def check_bullet_collision(self, ships, rocks, score):
+        explosions = []
         for ship in ships:
             for bullet in ship.bullets:
                 if self.rect.colliderect(bullet.rect):
                     ship.bullets.remove(bullet)
-                    explosion = Explosion(self.x,self.y)
-                    explosion_group.add(explosion)
+                    explosions.append(Explosion(self.x,self.y))
                     rocks.remove(self)
                     if self.size > 0.5:
-                        score.add(100)
+                        score += 100
                         for i in range(random.randint(1,4)):
-                            rocks.append(Rock(self.x,self.y,self.size/2))
+                            rocks.append(Rock({'x':self.x, 'y': self.y, 'size': self.size/2, 'speed': random.uniform(1, 3), 'angle': random.uniform(0, 2 * math.pi)}))
                     else:
-                        score.add(200)
-        return False
+                        score += 200
+        return {
+            "explosion": explosions,
+            "score": score}
     
     def to_dict(self):
         res = {

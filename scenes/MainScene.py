@@ -4,6 +4,7 @@ from entities.Rock import Rock
 from entities.Score import Score
 from scenes.BaseScene import BaseScene
 from entities.Ship import Ship
+from entities.Explosion import Explosion
 import pygame
 import math
 from Config import Config
@@ -61,6 +62,19 @@ class MainScene(BaseScene):
 
         updated_rocks = state['rocks']
         updated_players = state['players']
+        explosions = state['explosions']
+        self.score.set(state['score'])
+
+        for explosion in explosions:
+            if explosion['uuid'] not in [explosion.uuid for explosion in self.explosion_group]:
+                new_explosion = Explosion(explosion['x'], explosion['y'])
+                new_explosion.from_dict(explosion)
+                self.explosion_group.add(new_explosion)
+        self.explosion_group.update()
+        if (len(self.explosion_group) > 0):
+            self.network.send({"event": "delete_explosion", "explosion_uuid": [explosion.uuid for explosion in self.explosion_group]})
+        
+
         if len(self.players) < len(updated_players):
             for updated_ship in updated_players:
                 if updated_ship['uuid'] not in [ship.uuid for ship in self.players]:
@@ -69,10 +83,7 @@ class MainScene(BaseScene):
         # for updated_rock in updated_rocks:
         #     # rock.from_dict(updated_rock)
         #     self.rocks[self.rocks.index(updated_rock)].from_dict(updated_rock)
-        for updated_rock in updated_rocks:
-            for rock in self.rocks:
-                if rock.uuid == updated_rock['uuid']:
-                    rock.from_dict(updated_rock)
+        self.updateRocks(updated_rocks)
 
         for ship in self.players:
             for updated_ship in updated_players:
@@ -110,13 +121,7 @@ class MainScene(BaseScene):
             #     new_ship.move()
             #     self.players[self.players.index(ship)] = new_ship
         if len(self.rocks) == 0:
-            for i in range(random.randint(2,5)):
-                x = random.randint(0,500)
-                y = random.randint(0,500)
-                if(self.ship.x <= x <= self.ship.x + 60 and self.ship.y <= y <= self.ship.y + 60):
-                    x = self.ship.rect.x + 100
-                    y = self.ship.rect.y + 100
-                self.rocks.append(Rock(x, y))
+            self.network.send({"event": "new_rocks"})
 
     def remove_ship(self):
         self.ship = None
@@ -153,3 +158,22 @@ class MainScene(BaseScene):
         self.score.draw()
 
         
+
+    def updateRocks(self, rocks):
+        self_rocks = [rock.uuid for rock in self.rocks]
+        updated_rocks = [rock['uuid'] for rock in rocks]
+        diff = set(self_rocks).difference(updated_rocks)
+        for rock in self.rocks:
+            if rock.uuid in diff:
+                self.rocks.remove(rock)
+
+        for updated_rock in rocks:
+            if updated_rock['uuid'] in self_rocks:
+                for rock in self.rocks:
+                    if rock.uuid == updated_rock['uuid']:
+                        rock.from_dict(updated_rock)
+                continue
+
+            new_rock = Rock(updated_rock)
+            self.rocks.append(new_rock)
+            
