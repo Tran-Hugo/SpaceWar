@@ -15,8 +15,6 @@ def run(fps, starting_scene):
             filtered_events = []
             for event in pygame.event.get():
                 quit_attempt = False
-                if event.type == pygame.QUIT:
-                    quit_attempt = True
                 if event.type == pygame.KEYDOWN:
                     if (event.key == pygame.K_ESCAPE) or (pressed_keys[pygame.K_LALT] or pressed_keys[pygame.K_RALT] and event.key == pygame.K_F4) :
                         quit_attempt = True
