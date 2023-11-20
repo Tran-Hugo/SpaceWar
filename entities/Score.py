@@ -9,6 +9,10 @@ class Score():
        self.font = pygame.font.Font(None, 36)
        self.text = self.font.render(str(self.score), True,(255, 255, 255))
 
+    def set(self, points):
+        self.score = points
+        self.text = self.font.render(str(self.score), True,(255, 255, 255))
+        
     def add(self, points):
         self.score += points
         self.text = self.font.render(str(self.score), True,(255, 255, 255))
