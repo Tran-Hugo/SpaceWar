@@ -40,6 +40,8 @@ class Ship():
             if player['uuid'] == self.uuid:
                 self.from_dict(player)
                 break
+        blaster_sound = pygame.mixer.Sound(os.getcwd()+"/assets/sounds/blaster2.mp3")
+        blaster_sound.play()
     
     def lose_life(self):
         self.lifes -=1
